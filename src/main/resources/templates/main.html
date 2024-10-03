@@ -105,7 +105,7 @@
 
     <div class="grid" id="grid"></div>
 
-    <script>
+ <script>
     const rows = 15;
     const cols = 20;
 
@@ -135,6 +135,7 @@
     const errorMessage = document.getElementById('error-message');
 
     let adyacentes = [];  // Lista para guardar celdas adyacentes
+    let celdasCerradas = [];  // Lista para guardar celdas cerradas (las que ya se han procesado)
 
     toggleButton.addEventListener('click', function() {
         isPartidaMode = !isPartidaMode;
@@ -153,7 +154,7 @@
     calculateButton.addEventListener('click', function() {
         if (selectedPartida) {
             errorMessage.style.display = 'none';
-            limpiarAdyacentes(); // Limpiamos las celdas adyacentes anteriores
+            limpiarTablero(); // Limpiamos las celdas abiertas y cerradas anteriores
             calcularAdyacentes(selectedPartida); // Calculamos las nuevas celdas adyacentes
         } else {
             errorMessage.style.display = 'block';
@@ -259,9 +260,10 @@
             }
         });
 
-        // Colorear la mejor celda de azul grisáceo claro
+        // Colorear la mejor celda de azul grisáceo claro y añadirla a la lista de celdas cerradas
         if (mejorCelda) {
             mejorCelda.style.backgroundColor = '#A3B7C2'; // Color azul grisáceo claro
+            celdasCerradas.push(mejorCelda); // Añadir a la lista de celdas cerradas
         }
 
         console.log('Celdas adyacentes:', adyacentes);
@@ -283,23 +285,42 @@
         return 0; // Si no hay destino, devuelve 0
     }
 
-    function limpiarAdyacentes() {
-        // Eliminamos la clase 'adyacente' de todas las celdas adyacentes previamente seleccionadas
+    // Función para limpiar tanto las celdas abiertas (amarillas) como las cerradas (azul grisáceo)
+    function limpiarTablero() {
+        // Limpiamos las celdas adyacentes (amarillas)
         adyacentes.forEach(celda => {
             const cellElement = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
             cellElement.classList.remove('adyacente');
             
-            // Limpiamos el texto de valor si existe
-            const valorElemento = cellElement.querySelector('.value');
-            if (valorElemento) {
-                valorElemento.remove();
-            }
+            // Limpiamos el texto de los valores G, H y F
+            const valorG = cellElement.querySelector('.valueG');
+            const valorH = cellElement.querySelector('.valueH');
+            const valorF = cellElement.querySelector('.valueTotal');
+            if (valorG) valorG.remove();
+            if (valorH) valorH.remove();
+            if (valorF) valorF.remove();
         });
 
-        // Limpiamos la lista de celdas adyacentes
+        // Limpiamos las celdas cerradas (azul grisáceo)
+        celdasCerradas.forEach(celda => {
+            celda.style.backgroundColor = ''; // Restablecemos el color de fondo
+            
+            // Limpiamos el texto de los valores G, H y F
+            const valorG = celda.querySelector('.valueG');
+            const valorH = celda.querySelector('.valueH');
+            const valorF = celda.querySelector('.valueTotal');
+            if (valorG) valorG.remove();
+            if (valorH) valorH.remove();
+            if (valorF) valorF.remove();
+        });
+
+        // Limpiamos ambas listas
         adyacentes = [];
+        celdasCerradas = [];
     }
 </script>
+ 
+
 
 </body>
 </html>
