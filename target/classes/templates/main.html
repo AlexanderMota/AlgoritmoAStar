@@ -201,6 +201,9 @@
                 { row: 1, col: 1, valor: 14 }    // Diagonal abajo-derecha
             ];
 
+            let minF = Infinity; // Inicializar el mínimo F
+            let mejorCelda = null; // Inicializar la mejor celda
+
             direcciones.forEach(dir => {
                 const newRow = partidaRow + dir.row;
                 const newCol = partidaCol + dir.col;
@@ -219,7 +222,7 @@
                     valorGElemento.textContent = dir.valor;
 
                     // Añadimos el valor H en la esquina superior derecha de la celda
-                    const valorH = calcularDistancia(newRow, newCol); // Implementar calcularDistancia para obtener H
+                    const valorH = calcularDistancia(newRow, newCol) * 10; // Multiplicar H por 10
                     let valorHElemento = adyacenteCell.querySelector('.valueH');
                     if (!valorHElemento) {
                         valorHElemento = document.createElement('div');
@@ -228,15 +231,15 @@
                     }
                     valorHElemento.textContent = valorH;
 
-                    // Calculamos y mostramos la suma de G + H en el espacio restante
-                    const valorTotal = dir.valor + valorH;
+                    // Calculamos y mostramos la suma de G + H (valor F) en el espacio restante
+                    const valorF = dir.valor + valorH; // Suma de G + H
                     let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
                     if (!valorTotalElemento) {
                         valorTotalElemento = document.createElement('div');
                         valorTotalElemento.classList.add('valueTotal');
                         adyacenteCell.appendChild(valorTotalElemento);
                     }
-                    valorTotalElemento.textContent = valorTotal;
+                    valorTotalElemento.textContent = valorF;
 
                     // Guardamos la celda en la lista de adyacentes
                     adyacentes.push({
@@ -244,18 +247,27 @@
                         col: newCol,
                         valorG: dir.valor,
                         valorH: valorH,
-                        valorTotal: valorTotal
+                        valorF: valorF
                     });
+
+                    // Comprobamos si es el mínimo F
+                    if (valorF < minF) {
+                        minF = valorF; // Actualizar el mínimo F
+                        mejorCelda = adyacenteCell; // Actualizar la mejor celda
+                    }
                 }
             });
+
+            // Colorear la mejor celda de azul grisáceo claro
+            if (mejorCelda) {
+                mejorCelda.style.backgroundColor = '#A3B7C2'; // Color azul grisáceo claro
+            }
 
             console.log('Celdas adyacentes:', adyacentes);
         }
 
         // Función para calcular la distancia H (distancia a la celda destino)
-        // Debes implementar esta función para calcular la distancia desde (newRow, newCol) a la celda de destino
         function calcularDistancia(row, col) {
-            // Aquí deberías implementar el cálculo de distancia H desde (row, col) hasta el destino.
             if (selectedDestino) {
                 const destinoRow = parseInt(selectedDestino.getAttribute('data-row'));
                 const destinoCol = parseInt(selectedDestino.getAttribute('data-col'));
@@ -265,7 +277,6 @@
             }
             return 0; // Si no hay destino, devuelve 0
         }
-
         function limpiarAdyacentes() {
             // Eliminamos la clase 'adyacente' de todas las celdas adyacentes previamente seleccionadas
             adyacentes.forEach(celda => {
