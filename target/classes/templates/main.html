@@ -201,103 +201,133 @@
     }
 
     // Continuar con la búsqueda de la ruta
-    function continuarBusqueda() {
-        if (!selectedDestino) {
-            alert("Error: No hay destino seleccionado.");
-            return;
-        }
+	function continuarBusqueda() {
+	    if (!selectedDestino) {
+	        alert("Error: No hay destino seleccionado.");
+	        return;
+	    }
+	
+	    const ultimaCelda = celdasCerradas[celdasCerradas.length - 1];
+	    if (ultimaCelda === selectedDestino) {
+	        // Pintar las casillas de la ruta antes de mostrar el mensaje
+	        setTimeout(() => {
+	            alert("¡Camino completo! Se ha llegado al destino.");
+	        }, 500); // Dar un pequeño retraso para asegurar que las celdas se pinten antes de la alerta
+	        return;
+	    }
+	
+	    const destinoEncontrado = calcularAdyacentes(ultimaCelda);
+	
+	    // Si encontramos el destino (valorH = 0), detenemos el bucle
+	    if (destinoEncontrado) {
+	        // Pintar las casillas de la ruta antes de mostrar el mensaje
+	        setTimeout(() => {
+	            alert("¡Se ha encontrado el destino!");
+	        }, 500); // Dar un pequeño retraso para asegurar que las celdas se pinten antes de la alerta
+	        return;
+	    }
+	
+	    let mejorCelda = null;
+	    let minF = Infinity;
+	
+	    adyacentes.forEach(celda => {
+	        if (celda.valorF < minF) {
+	            minF = celda.valorF;
+	            mejorCelda = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
+	        }
+	    });
+	
+	    if (mejorCelda) {
+	        mejorCelda.style.backgroundColor = '#A3B7C2';
+	        celdasCerradas.push(mejorCelda);
+	    }
+	
+	    setTimeout(continuarBusqueda, 500);
+	}
 
-        const ultimaCelda = celdasCerradas[celdasCerradas.length - 1];
-        if (ultimaCelda === selectedDestino) {
-            alert("¡Camino completo! Se ha llegado al destino.");
-            return;
-        }
-
-        calcularAdyacentes(ultimaCelda);
-
-        let mejorCelda = null;
-        let minF = Infinity;
-
-        adyacentes.forEach(celda => {
-            if (celda.valorF < minF) {
-                minF = celda.valorF;
-                mejorCelda = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
-            }
-        });
-
-        if (mejorCelda) {
-            mejorCelda.style.backgroundColor = '#A3B7C2';
-            celdasCerradas.push(mejorCelda);
-        }
-
-        setTimeout(continuarBusqueda, 500);
-    }
 
     // Calcular celdas adyacentes
-    function calcularAdyacentes(partidaCell) {
-        const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
-        const partidaCol = parseInt(partidaCell.getAttribute('data-col'));
-        adyacentes = [];
+	function calcularAdyacentes(partidaCell) {
+	    const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
+	    const partidaCol = parseInt(partidaCell.getAttribute('data-col'));
+	    adyacentes = [];
+	
+	    const direcciones = [
+	        { row: -1, col: 0, valor: 10 },
+	        { row: 1, col: 0, valor: 10 },
+	        { row: 0, col: -1, valor: 10 },
+	        { row: 0, col: 1, valor: 10 },
+	        { row: -1, col: -1, valor: 14 },
+	        { row: -1, col: 1, valor: 14 },
+	        { row: 1, col: -1, valor: 14 },
+	        { row: 1, col: 1, valor: 14 }
+	    ];
+	
+	    for (const dir of direcciones) {
+	        const newRow = partidaRow + dir.row;
+	        const newCol = partidaCol + dir.col;
+	
+	        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+	            const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
+	
+	            if (!celdasCerradas.includes(adyacenteCell)) {
+	                const valorH = calcularDistanciaConDiagonal(newRow, newCol);
+	
+	                // Si encontramos la celda con valor h igual a 0, terminamos la búsqueda
+	                if (valorH === 0) {
+	                    adyacentes.push({
+	                        row: newRow,
+	                        col: newCol,
+	                        valorG: dir.valor,
+	                        valorH: valorH,
+	                        valorF: dir.valor // En este caso, F es igual a G porque H es 0
+	                    });
+	                    return true; // Terminamos la búsqueda porque hemos llegado al destino
+	                }
+	
+	                if (valorH > 0) {
+	                    adyacenteCell.classList.add('adyacente');
+	
+	                    let valorGElemento = adyacenteCell.querySelector('.valueG');
+	                    if (!valorGElemento) {
+	                        valorGElemento = document.createElement('div');
+	                        valorGElemento.classList.add('valueG');
+	                        adyacenteCell.appendChild(valorGElemento);
+	                    }
+	                    valorGElemento.textContent = dir.valor;
+	
+	                    let valorHElemento = adyacenteCell.querySelector('.valueH');
+	                    if (!valorHElemento) {
+	                        valorHElemento = document.createElement('div');
+	                        valorHElemento.classList.add('valueH');
+	                        adyacenteCell.appendChild(valorHElemento);
+	                    }
+	                    valorHElemento.textContent = valorH;
+	
+	                    const valorF = dir.valor + valorH;
+	                    let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
+	                    if (!valorTotalElemento) {
+	                        valorTotalElemento = document.createElement('div');
+	                        valorTotalElemento.classList.add('valueTotal');
+	                        adyacenteCell.appendChild(valorTotalElemento);
+	                    }
+	                    valorTotalElemento.textContent = valorF;
+	
+	                    adyacentes.push({
+	                        row: newRow,
+	                        col: newCol,
+	                        valorG: dir.valor,
+	                        valorH: valorH,
+	                        valorF: valorF
+	                    });
+	                }
+	            }
+	        }
+	    }
+	
+	    return false; // No se ha encontrado el destino todavía
+	}
 
-        const direcciones = [
-            { row: -1, col: 0, valor: 10 },
-            { row: 1, col: 0, valor: 10 },
-            { row: 0, col: -1, valor: 10 },
-            { row: 0, col: 1, valor: 10 },
-            { row: -1, col: -1, valor: 14 },
-            { row: -1, col: 1, valor: 14 },
-            { row: 1, col: -1, valor: 14 },
-            { row: 1, col: 1, valor: 14 }
-        ];
-
-        direcciones.forEach(dir => {
-            const newRow = partidaRow + dir.row;
-            const newCol = partidaCol + dir.col;
-
-            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
-
-                if (!celdasCerradas.includes(adyacenteCell)) {
-                    adyacenteCell.classList.add('adyacente');
-
-                    let valorGElemento = adyacenteCell.querySelector('.valueG');
-                    if (!valorGElemento) {
-                        valorGElemento = document.createElement('div');
-                        valorGElemento.classList.add('valueG');
-                        adyacenteCell.appendChild(valorGElemento);
-                    }
-                    valorGElemento.textContent = dir.valor;
-
-                    const valorH = calcularDistanciaConDiagonal(newRow, newCol);
-
-                    let valorHElemento = adyacenteCell.querySelector('.valueH');
-                    if (!valorHElemento) {
-                        valorHElemento = document.createElement('div');
-                        valorHElemento.classList.add('valueH');
-                        adyacenteCell.appendChild(valorHElemento);
-                    }
-                    valorHElemento.textContent = valorH;
-
-                    const valorF = dir.valor + valorH;
-                    let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
-                    if (!valorTotalElemento) {
-                        valorTotalElemento = document.createElement('div');
-                        valorTotalElemento.classList.add('valueTotal');
-                        adyacenteCell.appendChild(valorTotalElemento);
-                    }
-                    valorTotalElemento.textContent = valorF;
-
-                    adyacentes.push({
-                        row: newRow,
-                        col: newCol,
-                        valorG: dir.valor,
-                        valorH: valorH,
-                        valorF: valorF
-                    });
-                }
-            }
-        });
-    }
 
     // Función para reiniciar el tablero, manteniendo las selecciones de partida y destino
     function reiniciarTablero() {
