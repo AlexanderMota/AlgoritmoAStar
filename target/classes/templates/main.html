@@ -29,6 +29,12 @@
         .input-group {
             margin-bottom: 10px;
         }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            display: none; /* Ocultamos el mensaje de error por defecto */
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -54,6 +60,12 @@
 
     <!-- Botón para alternar entre partida y destino -->
     <button id="toggle-mode">Modo: Partida</button>
+    
+    <!-- Botón para validar selección de partida y destino -->
+    <button id="validate-selection">Validar Partida y Destino</button>
+    
+    <!-- Mensaje de error -->
+    <div class="error-message" id="error-message">Error: Debe seleccionar un punto de partida y un punto de destino.</div>
 
     <div class="grid" id="grid"></div>
 
@@ -81,12 +93,14 @@
         let selectedDestino = null;
         let isPartidaMode = true; // Si es true, seleccionamos la partida, si es false, el destino
 
-        // Referencias a los inputs
+        // Referencias a los inputs y botones
         const xPartidaInput = document.getElementById('x-partida');
         const yPartidaInput = document.getElementById('y-partida');
         const xDestinoInput = document.getElementById('x-destino');
         const yDestinoInput = document.getElementById('y-destino');
         const toggleButton = document.getElementById('toggle-mode');
+        const validateButton = document.getElementById('validate-selection');
+        const errorMessage = document.getElementById('error-message');
 
         // Lógica del botón para alternar entre partida y destino
         toggleButton.addEventListener('click', function() {
@@ -94,13 +108,27 @@
             toggleButton.textContent = isPartidaMode ? "Modo: Partida" : "Modo: Destino";
         });
 
+        // Lógica para validar si partida y destino han sido seleccionados
+        validateButton.addEventListener('click', function() {
+            // Verificamos si se ha seleccionado una partida y un destino
+            if (!selectedPartida || !selectedDestino) {
+                // Mostrar el mensaje de error
+                errorMessage.style.display = 'block';
+            } else {
+                // Ocultar el mensaje de error si todo está correcto
+                errorMessage.style.display = 'none';
+                
+                // Aquí puedes agregar la lógica que quieras ejecutar si todo está bien
+                alert("Partida y destino seleccionados correctamente.");
+            }
+        });
+
         function cellClicked(event) {
             const clickedCell = event.target;
             const row = clickedCell.getAttribute('data-row');
             const col = clickedCell.getAttribute('data-col');
 
-            //linea borar
-            //console.log(`Celda seleccionada en la posición: (${row}, ${col})`);
+            console.log(`Celda seleccionada en la posición: (${row}, ${col})`);
 
             // Si estamos en modo partida
             if (isPartidaMode) {
