@@ -106,193 +106,200 @@
     <div class="grid" id="grid"></div>
 
     <script>
-        const rows = 15;
-        const cols = 20;
+    const rows = 15;
+    const cols = 20;
 
-        const grid = document.getElementById('grid');
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.setAttribute('data-row', row);
-                cell.setAttribute('data-col', col);
-                cell.addEventListener('click', cellClicked);
-                grid.appendChild(cell);
-            }
+    const grid = document.getElementById('grid');
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.setAttribute('data-row', row);
+            cell.setAttribute('data-col', col);
+            cell.addEventListener('click', cellClicked);
+            grid.appendChild(cell);
         }
+    }
 
-        let selectedPartida = null;
-        let selectedDestino = null;
-        let isPartidaMode = true;
+    let selectedPartida = null;
+    let selectedDestino = null;
+    let isPartidaMode = true;
 
-        const xPartidaInput = document.getElementById('x-partida');
-        const yPartidaInput = document.getElementById('y-partida');
-        const xDestinoInput = document.getElementById('x-destino');
-        const yDestinoInput = document.getElementById('y-destino');
-        const toggleButton = document.getElementById('toggle-mode');
-        const validateButton = document.getElementById('validate-selection');
-        const calculateButton = document.getElementById('calculate-adjacent');
-        const errorMessage = document.getElementById('error-message');
+    const xPartidaInput = document.getElementById('x-partida');
+    const yPartidaInput = document.getElementById('y-partida');
+    const xDestinoInput = document.getElementById('x-destino');
+    const yDestinoInput = document.getElementById('y-destino');
+    const toggleButton = document.getElementById('toggle-mode');
+    const validateButton = document.getElementById('validate-selection');
+    const calculateButton = document.getElementById('calculate-adjacent');
+    const errorMessage = document.getElementById('error-message');
 
-        let adyacentes = [];  // Lista para guardar celdas adyacentes
+    let adyacentes = [];  // Lista para guardar celdas adyacentes
 
-        toggleButton.addEventListener('click', function() {
-            isPartidaMode = !isPartidaMode;
-            toggleButton.textContent = isPartidaMode ? "Modo: Partida" : "Modo: Destino";
-        });
+    toggleButton.addEventListener('click', function() {
+        isPartidaMode = !isPartidaMode;
+        toggleButton.textContent = isPartidaMode ? "Modo: Partida" : "Modo: Destino";
+    });
 
-        validateButton.addEventListener('click', function() {
-            if (!selectedPartida || !selectedDestino) {
-                errorMessage.style.display = 'block';
-            } else {
-                errorMessage.style.display = 'none';
-                alert("Partida y destino seleccionados correctamente.");
-            }
-        });
+    validateButton.addEventListener('click', function() {
+        if (!selectedPartida || !selectedDestino) {
+            errorMessage.style.display = 'block';
+        } else {
+            errorMessage.style.display = 'none';
+            alert("Partida y destino seleccionados correctamente.");
+        }
+    });
 
-        calculateButton.addEventListener('click', function() {
+    calculateButton.addEventListener('click', function() {
+        if (selectedPartida) {
+            errorMessage.style.display = 'none';
+            limpiarAdyacentes(); // Limpiamos las celdas adyacentes anteriores
+            calcularAdyacentes(selectedPartida); // Calculamos las nuevas celdas adyacentes
+        } else {
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = 'Error: Debe seleccionar un punto de partida.';
+        }
+    });
+
+    function cellClicked(event) {
+        const clickedCell = event.target;
+        const row = parseInt(clickedCell.getAttribute('data-row'));
+        const col = parseInt(clickedCell.getAttribute('data-col'));
+
+        if (isPartidaMode) {
             if (selectedPartida) {
-                errorMessage.style.display = 'none';
-                limpiarAdyacentes(); // Limpiamos las celdas adyacentes anteriores
-                calcularAdyacentes(selectedPartida); // Calculamos las nuevas celdas adyacentes
-            } else {
-                errorMessage.style.display = 'block';
-                errorMessage.textContent = 'Error: Debe seleccionar un punto de partida.';
+                selectedPartida.classList.remove('partida');
+            }
+            selectedPartida = clickedCell;
+            selectedPartida.classList.add('partida');
+            xPartidaInput.value = col;
+            yPartidaInput.value = row;
+        } else {
+            if (selectedDestino) {
+                selectedDestino.classList.remove('destino');
+            }
+            selectedDestino = clickedCell;
+            selectedDestino.classList.add('destino');
+            xDestinoInput.value = col;
+            yDestinoInput.value = row;
+        }
+    }
+
+    function calcularAdyacentes(partidaCell) {
+        const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
+        const partidaCol = parseInt(partidaCell.getAttribute('data-col'));
+        adyacentes = []; // Limpiar la lista de adyacentes
+
+        const direcciones = [
+            { row: -1, col: 0, valor: 10 },  // Arriba
+            { row: 1, col: 0, valor: 10 },   // Abajo
+            { row: 0, col: -1, valor: 10 },  // Izquierda
+            { row: 0, col: 1, valor: 10 },   // Derecha
+            { row: -1, col: -1, valor: 14 }, // Diagonal arriba-izquierda
+            { row: -1, col: 1, valor: 14 },  // Diagonal arriba-derecha
+            { row: 1, col: -1, valor: 14 },  // Diagonal abajo-izquierda
+            { row: 1, col: 1, valor: 14 }    // Diagonal abajo-derecha
+        ];
+
+        let minF = Infinity; // Inicializar el mínimo F
+        let mejorCelda = null; // Inicializar la mejor celda
+
+        direcciones.forEach(dir => {
+            const newRow = partidaRow + dir.row;
+            const newCol = partidaCol + dir.col;
+
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
+                adyacenteCell.classList.add('adyacente');
+
+                // Añadimos el valor G en la esquina superior izquierda de la celda
+                let valorGElemento = adyacenteCell.querySelector('.valueG');
+                if (!valorGElemento) {
+                    valorGElemento = document.createElement('div');
+                    valorGElemento.classList.add('valueG');
+                    adyacenteCell.appendChild(valorGElemento);
+                }
+                valorGElemento.textContent = dir.valor;
+
+                // Calculamos el valor H considerando diagonales y movimientos rectos
+                const valorH = calcularDistanciaConDiagonal(newRow, newCol);
+
+                let valorHElemento = adyacenteCell.querySelector('.valueH');
+                if (!valorHElemento) {
+                    valorHElemento = document.createElement('div');
+                    valorHElemento.classList.add('valueH');
+                    adyacenteCell.appendChild(valorHElemento);
+                }
+                valorHElemento.textContent = valorH;
+
+                // Calculamos y mostramos la suma de G + H (valor F) en el espacio restante
+                const valorF = dir.valor + valorH; // Suma de G + H
+                let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
+                if (!valorTotalElemento) {
+                    valorTotalElemento = document.createElement('div');
+                    valorTotalElemento.classList.add('valueTotal');
+                    adyacenteCell.appendChild(valorTotalElemento);
+                }
+                valorTotalElemento.textContent = valorF;
+
+                // Guardamos la celda en la lista de adyacentes
+                adyacentes.push({
+                    row: newRow,
+                    col: newCol,
+                    valorG: dir.valor,
+                    valorH: valorH,
+                    valorF: valorF
+                });
+
+                // Comprobamos si es el mínimo F
+                if (valorF < minF) {
+                    minF = valorF; // Actualizar el mínimo F
+                    mejorCelda = adyacenteCell; // Actualizar la mejor celda
+                }
             }
         });
 
-        function cellClicked(event) {
-            const clickedCell = event.target;
-            const row = parseInt(clickedCell.getAttribute('data-row'));
-            const col = parseInt(clickedCell.getAttribute('data-col'));
+        // Colorear la mejor celda de azul grisáceo claro
+        if (mejorCelda) {
+            mejorCelda.style.backgroundColor = '#A3B7C2'; // Color azul grisáceo claro
+        }
 
-            if (isPartidaMode) {
-                if (selectedPartida) {
-                    selectedPartida.classList.remove('partida');
-                }
-                selectedPartida = clickedCell;
-                selectedPartida.classList.add('partida');
-                xPartidaInput.value = col;
-                yPartidaInput.value = row;
-            } else {
-                if (selectedDestino) {
-                    selectedDestino.classList.remove('destino');
-                }
-                selectedDestino = clickedCell;
-                selectedDestino.classList.add('destino');
-                xDestinoInput.value = col;
-                yDestinoInput.value = row;
+        console.log('Celdas adyacentes:', adyacentes);
+    }
+
+    // Función para calcular la distancia H considerando movimientos diagonales y rectos
+    function calcularDistanciaConDiagonal(row, col) {
+        if (selectedDestino) {
+            const destinoRow = parseInt(selectedDestino.getAttribute('data-row'));
+            const destinoCol = parseInt(selectedDestino.getAttribute('data-col'));
+
+            // Calculamos la distancia octil (considerando diagonales y rectos)
+            const diffRow = Math.abs(destinoRow - row);
+            const diffCol = Math.abs(destinoCol - col);
+            
+            // Fórmula: 14 * min(diffRow, diffCol) + 10 * abs(diffRow - diffCol)
+            return 14 * Math.min(diffRow, diffCol) + 10 * Math.abs(diffRow - diffCol);
+        }
+        return 0; // Si no hay destino, devuelve 0
+    }
+
+    function limpiarAdyacentes() {
+        // Eliminamos la clase 'adyacente' de todas las celdas adyacentes previamente seleccionadas
+        adyacentes.forEach(celda => {
+            const cellElement = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
+            cellElement.classList.remove('adyacente');
+            
+            // Limpiamos el texto de valor si existe
+            const valorElemento = cellElement.querySelector('.value');
+            if (valorElemento) {
+                valorElemento.remove();
             }
-        }
+        });
 
-        function calcularAdyacentes(partidaCell) {
-            const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
-            const partidaCol = parseInt(partidaCell.getAttribute('data-col'));
-            adyacentes = []; // Limpiar la lista de adyacentes
+        // Limpiamos la lista de celdas adyacentes
+        adyacentes = [];
+    }
+</script>
 
-            const direcciones = [
-                { row: -1, col: 0, valor: 10 },  // Arriba
-                { row: 1, col: 0, valor: 10 },   // Abajo
-                { row: 0, col: -1, valor: 10 },  // Izquierda
-                { row: 0, col: 1, valor: 10 },   // Derecha
-                { row: -1, col: -1, valor: 14 }, // Diagonal arriba-izquierda
-                { row: -1, col: 1, valor: 14 },  // Diagonal arriba-derecha
-                { row: 1, col: -1, valor: 14 },  // Diagonal abajo-izquierda
-                { row: 1, col: 1, valor: 14 }    // Diagonal abajo-derecha
-            ];
-
-            let minF = Infinity; // Inicializar el mínimo F
-            let mejorCelda = null; // Inicializar la mejor celda
-
-            direcciones.forEach(dir => {
-                const newRow = partidaRow + dir.row;
-                const newCol = partidaCol + dir.col;
-
-                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                    const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
-                    adyacenteCell.classList.add('adyacente');
-
-                    // Añadimos el valor G en la esquina superior izquierda de la celda
-                    let valorGElemento = adyacenteCell.querySelector('.valueG');
-                    if (!valorGElemento) {
-                        valorGElemento = document.createElement('div');
-                        valorGElemento.classList.add('valueG');
-                        adyacenteCell.appendChild(valorGElemento);
-                    }
-                    valorGElemento.textContent = dir.valor;
-
-                    // Añadimos el valor H en la esquina superior derecha de la celda
-                    const valorH = calcularDistancia(newRow, newCol) * 10; // Multiplicar H por 10
-                    let valorHElemento = adyacenteCell.querySelector('.valueH');
-                    if (!valorHElemento) {
-                        valorHElemento = document.createElement('div');
-                        valorHElemento.classList.add('valueH');
-                        adyacenteCell.appendChild(valorHElemento);
-                    }
-                    valorHElemento.textContent = valorH;
-
-                    // Calculamos y mostramos la suma de G + H (valor F) en el espacio restante
-                    const valorF = dir.valor + valorH; // Suma de G + H
-                    let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
-                    if (!valorTotalElemento) {
-                        valorTotalElemento = document.createElement('div');
-                        valorTotalElemento.classList.add('valueTotal');
-                        adyacenteCell.appendChild(valorTotalElemento);
-                    }
-                    valorTotalElemento.textContent = valorF;
-
-                    // Guardamos la celda en la lista de adyacentes
-                    adyacentes.push({
-                        row: newRow,
-                        col: newCol,
-                        valorG: dir.valor,
-                        valorH: valorH,
-                        valorF: valorF
-                    });
-
-                    // Comprobamos si es el mínimo F
-                    if (valorF < minF) {
-                        minF = valorF; // Actualizar el mínimo F
-                        mejorCelda = adyacenteCell; // Actualizar la mejor celda
-                    }
-                }
-            });
-
-            // Colorear la mejor celda de azul grisáceo claro
-            if (mejorCelda) {
-                mejorCelda.style.backgroundColor = '#A3B7C2'; // Color azul grisáceo claro
-            }
-
-            console.log('Celdas adyacentes:', adyacentes);
-        }
-
-        // Función para calcular la distancia H (distancia a la celda destino)
-        function calcularDistancia(row, col) {
-            if (selectedDestino) {
-                const destinoRow = parseInt(selectedDestino.getAttribute('data-row'));
-                const destinoCol = parseInt(selectedDestino.getAttribute('data-col'));
-                
-                // Utiliza la distancia Manhattan como ejemplo
-                return Math.abs(destinoRow - row) + Math.abs(destinoCol - col);
-            }
-            return 0; // Si no hay destino, devuelve 0
-        }
-        function limpiarAdyacentes() {
-            // Eliminamos la clase 'adyacente' de todas las celdas adyacentes previamente seleccionadas
-            adyacentes.forEach(celda => {
-                const cellElement = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
-                cellElement.classList.remove('adyacente');
-                
-                // Limpiamos el texto de valor si existe
-                const valorElemento = cellElement.querySelector('.value');
-                if (valorElemento) {
-                    valorElemento.remove();
-                }
-            });
-
-            // Limpiamos la lista de celdas adyacentes
-            adyacentes = [];
-        }
-    </script>
 </body>
 </html>
