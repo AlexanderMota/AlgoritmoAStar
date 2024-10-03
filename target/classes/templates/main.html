@@ -105,7 +105,7 @@
 
     <div class="grid" id="grid"></div>
 
- <script>
+<script>
     const rows = 15;
     const cols = 20;
 
@@ -155,7 +155,7 @@
         if (selectedPartida) {
             errorMessage.style.display = 'none';
             limpiarTablero(); // Limpiamos las celdas abiertas y cerradas anteriores
-            calcularAdyacentes(selectedPartida); // Calculamos las nuevas celdas adyacentes
+            iniciarBusquedaCamino(); // Iniciar la búsqueda del camino hasta el destino
         } else {
             errorMessage.style.display = 'block';
             errorMessage.textContent = 'Error: Debe seleccionar un punto de partida.';
@@ -186,6 +186,56 @@
         }
     }
 
+    function iniciarBusquedaCamino() {
+        // Limpiar las listas antes de empezar
+        limpiarTablero();
+
+        // Empezamos con la celda de partida
+        celdasCerradas.push(selectedPartida);
+
+        // Ejecutar el bucle de búsqueda
+        continuarBusqueda();
+    }
+
+    function continuarBusqueda() {
+        if (!selectedDestino) {
+            alert("Error: No hay destino seleccionado.");
+            return;
+        }
+
+        // Obtener la última celda de la lista de celdas cerradas
+        const ultimaCelda = celdasCerradas[celdasCerradas.length - 1];
+
+        // Si hemos llegado al destino, terminamos el proceso
+        if (ultimaCelda === selectedDestino) {
+            alert("¡Camino completo! Se ha llegado al destino.");
+            return;
+        }
+
+        // Calcular las celdas adyacentes a la última celda cerrada
+        calcularAdyacentes(ultimaCelda);
+
+        // Seleccionar la adyacente con el menor valor F
+        let mejorCelda = null;
+        let minF = Infinity;
+
+        adyacentes.forEach(celda => {
+            if (celda.valorF < minF) {
+                minF = celda.valorF;
+                mejorCelda = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
+            }
+        });
+
+        // Colorear la mejor celda de azul grisáceo claro y añadirla a la lista de celdas cerradas
+        if (mejorCelda) {
+            mejorCelda.style.backgroundColor = '#A3B7C2';
+            celdasCerradas.push(mejorCelda);
+        }
+
+        // Continuar la búsqueda después de un pequeño retardo para observar el proceso
+        setTimeout(continuarBusqueda, 500);
+    }
+
     function calcularAdyacentes(partidaCell) {
         const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
         const partidaCol = parseInt(partidaCell.getAttribute('data-col'));
@@ -202,71 +252,58 @@
             { row: 1, col: 1, valor: 14 }    // Diagonal abajo-derecha
         ];
 
-        let minF = Infinity; // Inicializar el mínimo F
-        let mejorCelda = null; // Inicializar la mejor celda
-
         direcciones.forEach(dir => {
             const newRow = partidaRow + dir.row;
             const newCol = partidaCol + dir.col;
 
             if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
                 const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
-                adyacenteCell.classList.add('adyacente');
 
-                // Añadimos el valor G en la esquina superior izquierda de la celda
-                let valorGElemento = adyacenteCell.querySelector('.valueG');
-                if (!valorGElemento) {
-                    valorGElemento = document.createElement('div');
-                    valorGElemento.classList.add('valueG');
-                    adyacenteCell.appendChild(valorGElemento);
-                }
-                valorGElemento.textContent = dir.valor;
+                // Solo calcular si la celda no está ya en la lista de cerradas
+                if (!celdasCerradas.includes(adyacenteCell)) {
+                    adyacenteCell.classList.add('adyacente');
 
-                // Calculamos el valor H considerando diagonales y movimientos rectos
-                const valorH = calcularDistanciaConDiagonal(newRow, newCol);
+                    // Añadimos el valor G en la esquina superior izquierda de la celda
+                    let valorGElemento = adyacenteCell.querySelector('.valueG');
+                    if (!valorGElemento) {
+                        valorGElemento = document.createElement('div');
+                        valorGElemento.classList.add('valueG');
+                        adyacenteCell.appendChild(valorGElemento);
+                    }
+                    valorGElemento.textContent = dir.valor;
 
-                let valorHElemento = adyacenteCell.querySelector('.valueH');
-                if (!valorHElemento) {
-                    valorHElemento = document.createElement('div');
-                    valorHElemento.classList.add('valueH');
-                    adyacenteCell.appendChild(valorHElemento);
-                }
-                valorHElemento.textContent = valorH;
+                    // Calculamos el valor H considerando diagonales y movimientos rectos
+                    const valorH = calcularDistanciaConDiagonal(newRow, newCol);
 
-                // Calculamos y mostramos la suma de G + H (valor F) en el espacio restante
-                const valorF = dir.valor + valorH; // Suma de G + H
-                let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
-                if (!valorTotalElemento) {
-                    valorTotalElemento = document.createElement('div');
-                    valorTotalElemento.classList.add('valueTotal');
-                    adyacenteCell.appendChild(valorTotalElemento);
-                }
-                valorTotalElemento.textContent = valorF;
+                    let valorHElemento = adyacenteCell.querySelector('.valueH');
+                    if (!valorHElemento) {
+                        valorHElemento = document.createElement('div');
+                        valorHElemento.classList.add('valueH');
+                        adyacenteCell.appendChild(valorHElemento);
+                    }
+                    valorHElemento.textContent = valorH;
 
-                // Guardamos la celda en la lista de adyacentes
-                adyacentes.push({
-                    row: newRow,
-                    col: newCol,
-                    valorG: dir.valor,
-                    valorH: valorH,
-                    valorF: valorF
-                });
+                    // Calculamos y mostramos la suma de G + H (valor F) en el espacio restante
+                    const valorF = dir.valor + valorH; // Suma de G + H
+                    let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
+                    if (!valorTotalElemento) {
+                        valorTotalElemento = document.createElement('div');
+                        valorTotalElemento.classList.add('valueTotal');
+                        adyacenteCell.appendChild(valorTotalElemento);
+                    }
+                    valorTotalElemento.textContent = valorF;
 
-                // Comprobamos si es el mínimo F
-                if (valorF < minF) {
-                    minF = valorF; // Actualizar el mínimo F
-                    mejorCelda = adyacenteCell; // Actualizar la mejor celda
+                    // Guardamos la celda en la lista de adyacentes
+                    adyacentes.push({
+                        row: newRow,
+                        col: newCol,
+                        valorG: dir.valor,
+                        valorH: valorH,
+                        valorF: valorF
+                    });
                 }
             }
         });
-
-        // Colorear la mejor celda de azul grisáceo claro y añadirla a la lista de celdas cerradas
-        if (mejorCelda) {
-            mejorCelda.style.backgroundColor = '#A3B7C2'; // Color azul grisáceo claro
-            celdasCerradas.push(mejorCelda); // Añadir a la lista de celdas cerradas
-        }
-
-        console.log('Celdas adyacentes:', adyacentes);
     }
 
     // Función para calcular la distancia H considerando movimientos diagonales y rectos
@@ -275,24 +312,23 @@
             const destinoRow = parseInt(selectedDestino.getAttribute('data-row'));
             const destinoCol = parseInt(selectedDestino.getAttribute('data-col'));
 
-            // Calculamos la distancia octil (considerando diagonales y rectos)
             const diffRow = Math.abs(destinoRow - row);
             const diffCol = Math.abs(destinoCol - col);
-            
-            // Fórmula: 14 * min(diffRow, diffCol) + 10 * abs(diffRow - diffCol)
-            return 14 * Math.min(diffRow, diffCol) + 10 * Math.abs(diffRow - diffCol);
+
+            // Distancia utilizando diagonal preferida, multiplicamos por 10 para ajustar a nuestro valor H
+            return (Math.min(diffRow, diffCol) * 14 + Math.abs(diffRow - diffCol) * 10);
         }
         return 0; // Si no hay destino, devuelve 0
     }
 
-    // Función para limpiar tanto las celdas abiertas (amarillas) como las cerradas (azul grisáceo)
+    // Limpiar celdas abiertas, cerradas y sus valores
     function limpiarTablero() {
         // Limpiamos las celdas adyacentes (amarillas)
         adyacentes.forEach(celda => {
             const cellElement = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
             cellElement.classList.remove('adyacente');
-            
-            // Limpiamos el texto de los valores G, H y F
+            cellElement.style.backgroundColor = '';
+
             const valorG = cellElement.querySelector('.valueG');
             const valorH = cellElement.querySelector('.valueH');
             const valorF = cellElement.querySelector('.valueTotal');
@@ -304,8 +340,7 @@
         // Limpiamos las celdas cerradas (azul grisáceo)
         celdasCerradas.forEach(celda => {
             celda.style.backgroundColor = ''; // Restablecemos el color de fondo
-            
-            // Limpiamos el texto de los valores G, H y F
+
             const valorG = celda.querySelector('.valueG');
             const valorH = celda.querySelector('.valueH');
             const valorF = celda.querySelector('.valueTotal');
@@ -319,7 +354,6 @@
         celdasCerradas = [];
     }
 </script>
- 
 
 
 </body>
