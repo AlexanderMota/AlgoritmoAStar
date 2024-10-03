@@ -11,6 +11,7 @@
             gap: 1px;
         }
         .cell {
+            position: relative;
             width: 40px;
             height: 40px;
             border: 1px solid black;
@@ -28,6 +29,13 @@
         }
         .cell.adyacente {
             background-color: yellow;
+        }
+        .cell .value {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 12px;
+            color: black;
         }
         .input-group {
             margin-bottom: 10px;
@@ -123,7 +131,8 @@
         calculateButton.addEventListener('click', function() {
             if (selectedPartida) {
                 errorMessage.style.display = 'none';
-                calcularAdyacentes(selectedPartida);
+                limpiarAdyacentes(); // Limpiamos las celdas adyacentes anteriores
+                calcularAdyacentes(selectedPartida); // Calculamos las nuevas celdas adyacentes
             } else {
                 errorMessage.style.display = 'block';
                 errorMessage.textContent = 'Error: Debe seleccionar un punto de partida.';
@@ -178,6 +187,15 @@
                     const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
                     adyacenteCell.classList.add('adyacente');
 
+                    // Añadimos el valor en la esquina superior izquierda de la celda
+                    let valorElemento = adyacenteCell.querySelector('.value');
+                    if (!valorElemento) {
+                        valorElemento = document.createElement('div');
+                        valorElemento.classList.add('value');
+                        adyacenteCell.appendChild(valorElemento);
+                    }
+                    valorElemento.textContent = dir.valor;
+
                     adyacentes.push({
                         row: newRow,
                         col: newCol,
@@ -187,6 +205,23 @@
             });
 
             console.log('Celdas adyacentes:', adyacentes);
+        }
+
+        function limpiarAdyacentes() {
+            // Eliminamos la clase 'adyacente' de todas las celdas adyacentes previamente seleccionadas
+            adyacentes.forEach(celda => {
+                const cellElement = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
+                cellElement.classList.remove('adyacente');
+                
+                // Limpiamos el texto de valor si existe
+                const valorElemento = cellElement.querySelector('.value');
+                if (valorElemento) {
+                    valorElemento.remove();
+                }
+            });
+
+            // Limpiamos la lista de celdas adyacentes
+            adyacentes = [];
         }
     </script>
 </body>
