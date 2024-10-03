@@ -1,0 +1,41 @@
+package com.alexmonteroproject.aestrella.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.ui.Model;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class HellowController {
+
+    @GetMapping("/")
+    public String helloWorld(Model model) {
+        List<Cell> cells = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 15; j++) {
+                cells.add(new Cell(i, j));
+            }
+        }
+        model.addAttribute("cells", cells);
+        return "main"; // nombre del archivo HTML (main.html) en templates
+    }
+    public static class Cell {
+        private int row;
+        private int col;
+
+        public Cell(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public int getCol() {
+            return col;
+        }
+    }
+}

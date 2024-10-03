@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Vista de Cuadrícula</title>
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(20, 40px); /* 20 columnas */
+            grid-template-rows: repeat(15, 40px); /* 15 filas */
+            gap: 1px;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid black;
+            background-color: lightgray;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .cell.partida {
+            background-color: red;
+        }
+        .cell.destino {
+            background-color: blue;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vista de Cuadrícula</h1>
+    
+    <!-- Inputs para mostrar los valores del eje X y Y -->
+    <div class="input-group">
+        <label for="x-partida">Valor del Eje X (Partida):</label>
+        <input type="text" id="x-partida" readonly>
+    </div>
+    <div class="input-group">
+        <label for="y-partida">Valor del Eje Y (Partida):</label>
+        <input type="text" id="y-partida" readonly>
+    </div>
+    <div class="input-group">
+        <label for="x-destino">Valor del Eje X (Destino):</label>
+        <input type="text" id="x-destino" readonly>
+    </div>
+    <div class="input-group">
+        <label for="y-destino">Valor del Eje Y (Destino):</label>
+        <input type="text" id="y-destino" readonly>
+    </div>
+
+    <!-- Botón para alternar entre partida y destino -->
+    <button id="toggle-mode">Modo: Partida</button>
+
+    <div class="grid" id="grid"></div>
+
+    <script>
+        // Variables para el tamaño de la cuadrícula
+        const rows = 15;
+        const cols = 20;
+
+        // Crear la cuadrícula dinámicamente
+        const grid = document.getElementById('grid');
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-row', row);
+                cell.setAttribute('data-col', col);
+                cell.addEventListener('click', cellClicked);
+                grid.appendChild(cell);
+            }
+        }
+
+        // Variables para controlar el estado de la selección
+        let selectedPartida = null;
+        let selectedDestino = null;
+        let isPartidaMode = true; // Si es true, seleccionamos la partida, si es false, el destino
+
+        // Referencias a los inputs
+        const xPartidaInput = document.getElementById('x-partida');
+        const yPartidaInput = document.getElementById('y-partida');
+        const xDestinoInput = document.getElementById('x-destino');
+        const yDestinoInput = document.getElementById('y-destino');
+        const toggleButton = document.getElementById('toggle-mode');
+
+        // Lógica del botón para alternar entre partida y destino
+        toggleButton.addEventListener('click', function() {
+            isPartidaMode = !isPartidaMode;
+            toggleButton.textContent = isPartidaMode ? "Modo: Partida" : "Modo: Destino";
+        });
+
+        function cellClicked(event) {
+            const clickedCell = event.target;
+            const row = clickedCell.getAttribute('data-row');
+            const col = clickedCell.getAttribute('data-col');
+
+            console.log(`Celda seleccionada en la posición: (${row}, ${col})`);
+
+            // Si estamos en modo partida
+            if (isPartidaMode) {
+                // Si ya hay una celda de partida seleccionada, quitamos la clase "partida"
+                if (selectedPartida) {
+                    selectedPartida.classList.remove('partida');
+                }
+                // Marcamos la nueva celda como partida
+                selectedPartida = clickedCell;
+                selectedPartida.classList.add('partida');
+                
+                // Actualizamos los valores de los inputs de partida
+                xPartidaInput.value = col;
+                yPartidaInput.value = row;
+            } else {
+                // Si ya hay una celda de destino seleccionada, quitamos la clase "destino"
+                if (selectedDestino) {
+                    selectedDestino.classList.remove('destino');
+                }
+                // Marcamos la nueva celda como destino
+                selectedDestino = clickedCell;
+                selectedDestino.classList.add('destino');
+
+                // Actualizamos los valores de los inputs de destino
+                xDestinoInput.value = col;
+                yDestinoInput.value = row;
+            }
+        }
+    </script>
+</body>
+</html>
