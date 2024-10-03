@@ -26,6 +26,9 @@
         .cell.destino {
             background-color: blue;
         }
+        .cell.adyacente {
+            background-color: yellow;
+        }
         .input-group {
             margin-bottom: 10px;
         }
@@ -64,19 +67,19 @@
     <!-- Botón para validar selección de partida y destino -->
     <button id="validate-selection">Validar Partida y Destino</button>
     
+    <!-- Botón para calcular las celdas adyacentes -->
+    <button id="calculate-adjacent">Calcular Celdas Adyacentes</button>
+
     <!-- Mensaje de error -->
     <div class="error-message" id="error-message">Error: Debe seleccionar un punto de partida y un punto de destino.</div>
 
     <div class="grid" id="grid"></div>
 
     <script>
-        // Variables para el tamaño de la cuadrícula
         const rows = 15;
         const cols = 20;
 
-        // Crear la cuadrícula dinámicamente
         const grid = document.getElementById('grid');
-
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
                 const cell = document.createElement('div');
@@ -88,74 +91,102 @@
             }
         }
 
-        // Variables para controlar el estado de la selección
         let selectedPartida = null;
         let selectedDestino = null;
-        let isPartidaMode = true; // Si es true, seleccionamos la partida, si es false, el destino
+        let isPartidaMode = true;
 
-        // Referencias a los inputs y botones
         const xPartidaInput = document.getElementById('x-partida');
         const yPartidaInput = document.getElementById('y-partida');
         const xDestinoInput = document.getElementById('x-destino');
         const yDestinoInput = document.getElementById('y-destino');
         const toggleButton = document.getElementById('toggle-mode');
         const validateButton = document.getElementById('validate-selection');
+        const calculateButton = document.getElementById('calculate-adjacent');
         const errorMessage = document.getElementById('error-message');
 
-        // Lógica del botón para alternar entre partida y destino
+        let adyacentes = [];  // Lista para guardar celdas adyacentes
+
         toggleButton.addEventListener('click', function() {
             isPartidaMode = !isPartidaMode;
             toggleButton.textContent = isPartidaMode ? "Modo: Partida" : "Modo: Destino";
         });
 
-        // Lógica para validar si partida y destino han sido seleccionados
         validateButton.addEventListener('click', function() {
-            // Verificamos si se ha seleccionado una partida y un destino
             if (!selectedPartida || !selectedDestino) {
-                // Mostrar el mensaje de error
                 errorMessage.style.display = 'block';
             } else {
-                // Ocultar el mensaje de error si todo está correcto
                 errorMessage.style.display = 'none';
-                
-                // Aquí puedes agregar la lógica que quieras ejecutar si todo está bien
                 alert("Partida y destino seleccionados correctamente.");
+            }
+        });
+
+        calculateButton.addEventListener('click', function() {
+            if (selectedPartida) {
+                errorMessage.style.display = 'none';
+                calcularAdyacentes(selectedPartida);
+            } else {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Error: Debe seleccionar un punto de partida.';
             }
         });
 
         function cellClicked(event) {
             const clickedCell = event.target;
-            const row = clickedCell.getAttribute('data-row');
-            const col = clickedCell.getAttribute('data-col');
+            const row = parseInt(clickedCell.getAttribute('data-row'));
+            const col = parseInt(clickedCell.getAttribute('data-col'));
 
-            console.log(`Celda seleccionada en la posición: (${row}, ${col})`);
-
-            // Si estamos en modo partida
             if (isPartidaMode) {
-                // Si ya hay una celda de partida seleccionada, quitamos la clase "partida"
                 if (selectedPartida) {
                     selectedPartida.classList.remove('partida');
                 }
-                // Marcamos la nueva celda como partida
                 selectedPartida = clickedCell;
                 selectedPartida.classList.add('partida');
-                
-                // Actualizamos los valores de los inputs de partida
                 xPartidaInput.value = col;
                 yPartidaInput.value = row;
             } else {
-                // Si ya hay una celda de destino seleccionada, quitamos la clase "destino"
                 if (selectedDestino) {
                     selectedDestino.classList.remove('destino');
                 }
-                // Marcamos la nueva celda como destino
                 selectedDestino = clickedCell;
                 selectedDestino.classList.add('destino');
-
-                // Actualizamos los valores de los inputs de destino
                 xDestinoInput.value = col;
                 yDestinoInput.value = row;
             }
+        }
+
+        function calcularAdyacentes(partidaCell) {
+            const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
+            const partidaCol = parseInt(partidaCell.getAttribute('data-col'));
+            adyacentes = [];
+
+            const direcciones = [
+                { row: -1, col: 0, valor: 10 },  // Arriba
+                { row: 1, col: 0, valor: 10 },   // Abajo
+                { row: 0, col: -1, valor: 10 },  // Izquierda
+                { row: 0, col: 1, valor: 10 },   // Derecha
+                { row: -1, col: -1, valor: 14 }, // Diagonal arriba-izquierda
+                { row: -1, col: 1, valor: 14 },  // Diagonal arriba-derecha
+                { row: 1, col: -1, valor: 14 },  // Diagonal abajo-izquierda
+                { row: 1, col: 1, valor: 14 }    // Diagonal abajo-derecha
+            ];
+
+            direcciones.forEach(dir => {
+                const newRow = partidaRow + dir.row;
+                const newCol = partidaCol + dir.col;
+
+                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                    const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
+                    adyacenteCell.classList.add('adyacente');
+
+                    adyacentes.push({
+                        row: newRow,
+                        col: newCol,
+                        valor: dir.valor
+                    });
+                }
+            });
+
+            console.log('Celdas adyacentes:', adyacentes);
         }
     </script>
 </body>
