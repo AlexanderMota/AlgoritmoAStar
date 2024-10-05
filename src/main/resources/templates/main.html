@@ -183,6 +183,14 @@
         }
     });
 
+ 	// Modificación para añadir la propiedad 'padre'
+    function iniciarBusquedaCamino() {
+        limpiarTablero();  // Limpiar el tablero antes de comenzar la búsqueda
+        selectedPartida.setAttribute('data-g', '0');  // Inicializamos el valor G en 0 en la partida
+        celdasCerradas.push(selectedPartida);  // Iniciar desde la partida
+        continuarBusqueda();
+    }
+    
     // Función para manejar el clic en las celdas
     function cellClicked(event) {
         const clickedCell = event.target;
@@ -219,7 +227,7 @@
         continuarBusqueda();
     }
 
-    // Continuar con la búsqueda de la ruta
+ // Continuar con la búsqueda de la ruta
     function continuarBusqueda() {
         if (!selectedDestino) {
             alert("Error: No hay destino seleccionado.");
@@ -228,7 +236,8 @@
 
         const ultimaCelda = celdasCerradas[celdasCerradas.length - 1];
         if (ultimaCelda === selectedDestino) {
-            // Pintar las casillas de la ruta antes de mostrar el mensaje
+            // Recorrer la ruta hacia atrás desde el destino usando la propiedad 'padre'
+            trazarRutaOptima(ultimaCelda);
             setTimeout(() => {
                 alert("¡Camino completo! Se ha llegado al destino.");
             }, 500); // Dar un pequeño retraso para asegurar que las celdas se pinten antes de la alerta
@@ -239,10 +248,10 @@
 
         // Si encontramos el destino (valorH = 0), detenemos el bucle
         if (destinoEncontrado) {
-            // Pintar las casillas de la ruta antes de mostrar el mensaje
+            trazarRutaOptima(selectedDestino); // Trazar la ruta óptima
             setTimeout(() => {
                 alert("¡Se ha encontrado el destino!");
-            }, 500); // Dar un pequeño retraso para asegurar que las celdas se pinten antes de la alerta
+            }, 500);
             return;
         }
 
@@ -263,73 +272,100 @@
 
         setTimeout(continuarBusqueda, 500);
     }
+ 
+    function actualizarValoresVisuales(celda, valorG, valorH) {
+        let valorGElemento = celda.querySelector('.valueG');
+        if (!valorGElemento) {
+            valorGElemento = document.createElement('div');
+            valorGElemento.classList.add('valueG');
+            celda.appendChild(valorGElemento);
+        }
+        valorGElemento.textContent = valorG;
 
+        let valorHElemento = celda.querySelector('.valueH');
+        if (!valorHElemento) {
+            valorHElemento = document.createElement('div');
+            valorHElemento.classList.add('valueH');
+            celda.appendChild(valorHElemento);
+        }
+        valorHElemento.textContent = valorH;
+
+        const valorF = valorG + valorH;
+        let valorTotalElemento = celda.querySelector('.valueTotal');
+        if (!valorTotalElemento) {
+            valorTotalElemento = document.createElement('div');
+            valorTotalElemento.classList.add('valueTotal');
+            celda.appendChild(valorTotalElemento);
+        }
+        valorTotalElemento.textContent = valorF;
+    }
+ // Trazar la ruta óptima desde el destino hacia la partida
+    function trazarRutaOptima(celda) {
+	    while (celda) {
+	        celda.style.backgroundColor = '#FFD700';  // Marcar la ruta en color amarillo
+	        celda = celda.padre;  // Ir hacia la celda padre
+	    }
+	}
  // Calcular celdas adyacentes
     function calcularAdyacentes(partidaCell) {
         const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
         const partidaCol = parseInt(partidaCell.getAttribute('data-col'));
         adyacentes = [];
 
-        // Definir las direcciones y sus respectivos valores de movimiento (G)
         const direcciones = [
-            { row: -1, col: 0, valorG: 10 },  // Arriba (valor 10)
-            { row: 1, col: 0, valorG: 10 },   // Abajo (valor 10)
-            { row: 0, col: -1, valorG: 10 },  // Izquierda (valor 10)
-            { row: 0, col: 1, valorG: 10 },   // Derecha (valor 10)
-            { row: -1, col: -1, valorG: 14 }, // Diagonal superior izquierda (valor 14)
-            { row: -1, col: 1, valorG: 14 },  // Diagonal superior derecha (valor 14)
-            { row: 1, col: -1, valorG: 14 },  // Diagonal inferior izquierda (valor 14)
-            { row: 1, col: 1, valorG: 14 }    // Diagonal inferior derecha (valor 14)
+            { row: -1, col: 0, valorG: 10 },
+            { row: 1, col: 0, valorG: 10 },
+            { row: 0, col: -1, valorG: 10 },
+            { row: 0, col: 1, valorG: 10 },
+            { row: -1, col: -1, valorG: 14 },
+            { row: -1, col: 1, valorG: 14 },
+            { row: 1, col: -1, valorG: 14 },
+            { row: 1, col: 1, valorG: 14 }
         ];
 
-        // Iterar sobre cada dirección para calcular las celdas adyacentes
         for (const dir of direcciones) {
             const newRow = partidaRow + dir.row;
             const newCol = partidaCol + dir.col;
 
-            // Comprobar si la nueva celda está dentro de los límites
             if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
                 const adyacenteCell = document.querySelector(`.cell[data-row='${newRow}'][data-col='${newCol}']`);
 
-                // Ignorar las celdas marcadas como obstáculo
                 if (adyacenteCell.classList.contains('obstaculo')) {
                     continue;
                 }
 
-                // Verificar si la celda no está cerrada
                 if (!celdasCerradas.includes(adyacenteCell)) {
-                    const valorH = calcularDistanciaConDiagonal(newRow, newCol); // Heurística H
-
-                    // Obtener el valor G acumulado de la celda actual
+                    const valorH = calcularDistanciaConDiagonal(newRow, newCol);
                     const valorGActual = parseInt(partidaCell.getAttribute('data-g')) || 0;
-                    const nuevoValorG = valorGActual + dir.valorG; // Acumular G
+                    const nuevoValorG = valorGActual + dir.valorG;
 
-                    // Si encontramos el destino (valorH = 0)
                     if (valorH === 0) {
+                        adyacenteCell.padre = partidaCell;  // Guardar celda padre
                         adyacentes.push({
                             row: newRow,
                             col: newCol,
                             valorG: nuevoValorG,
                             valorH: valorH,
-                            valorF: nuevoValorG // F es igual a G porque H es 0
+                            valorF: nuevoValorG
                         });
-                        return true; // Terminamos la búsqueda porque llegamos al destino
+                        return true;
                     }
 
-                    // Solo se procesan celdas con valor H mayor a 0
-                    if (valorH > 0) {
+                    const valorFGActual = parseInt(adyacenteCell.getAttribute('data-g')) || Infinity;
+                    if (nuevoValorG < valorFGActual) {
                         adyacenteCell.classList.add('adyacente');
 
-                        // Mostrar valor G (costo acumulado de moverse a la celda)
+                        adyacenteCell.setAttribute('data-g', nuevoValorG);
+                        adyacenteCell.padre = partidaCell;  // Asignar celda padre
+
                         let valorGElemento = adyacenteCell.querySelector('.valueG');
                         if (!valorGElemento) {
                             valorGElemento = document.createElement('div');
                             valorGElemento.classList.add('valueG');
                             adyacenteCell.appendChild(valorGElemento);
                         }
-                        valorGElemento.textContent = nuevoValorG; // Actualizar el G acumulado
+                        valorGElemento.textContent = nuevoValorG;
 
-                        // Mostrar valor H (distancia heurística)
                         let valorHElemento = adyacenteCell.querySelector('.valueH');
                         if (!valorHElemento) {
                             valorHElemento = document.createElement('div');
@@ -338,10 +374,7 @@
                         }
                         valorHElemento.textContent = valorH;
 
-                        // Calcular F (G + H)
                         const valorF = nuevoValorG + valorH;
-
-                        // Mostrar valor F
                         let valorTotalElemento = adyacenteCell.querySelector('.valueTotal');
                         if (!valorTotalElemento) {
                             valorTotalElemento = document.createElement('div');
@@ -350,7 +383,6 @@
                         }
                         valorTotalElemento.textContent = valorF;
 
-                        // Guardar los valores de la celda adyacente
                         adyacentes.push({
                             row: newRow,
                             col: newCol,
@@ -358,18 +390,12 @@
                             valorH: valorH,
                             valorF: valorF
                         });
-
-                        // Guardar el valor G acumulado en la celda adyacente para su uso posterior
-                        adyacenteCell.setAttribute('data-g', nuevoValorG);
                     }
                 }
             }
         }
-
-        return false; // No se ha encontrado el destino todavía
+        return false;
     }
-
-
 
     // Función para reiniciar el tablero, manteniendo las selecciones de partida, destino y obstáculos
     function reiniciarTablero() {

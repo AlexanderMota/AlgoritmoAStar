@@ -13,7 +13,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorizeHttpRequests ->
                 authorizeHttpRequests
-                    .requestMatchers("/", "/hello").permitAll() // Permite acceso sin autenticación
+                    .requestMatchers("/", "/hello", "/aestrella1", "/aestrella2", "/aestrella3").permitAll() // Permite acceso sin autenticación
                     .anyRequest().authenticated() // Requiere autenticación para otras rutas
             )
             .formLogin(formLogin ->

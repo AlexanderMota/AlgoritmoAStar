@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista de Cuadrícula</title>
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(20, 40px); /* 20 columnas */
+            grid-template-rows: repeat(15, 40px); /* 15 filas */
+            gap: 1px;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid black;
+            background-color: lightgray;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .valueG, .valueH, .valueTotal {
+            font-size: 10px;
+            position: absolute;
+        }
+        .valueG {
+            top: 2px;
+            left: 2px;
+        }
+        .valueH {
+            top: 2px;
+            right: 2px;
+        }
+        .valueTotal {
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .cell.partida {
+            background-color: red;
+        }
+        .cell.destino {
+            background-color: blue;
+        }
+        .cell.adyacente {
+            background-color: yellow;
+        }
+        .cell.obstaculo {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Vista de Cuadrícula</h1>
+
+    <button id="toggle-mode">Modo: Partida</button>
+    <button id="validate-selection">Validar Partida y Destino</button>
+    <button id="calculate-adjacent">Calcular Celdas Adyacentes</button>
+    <button id="toggle-obstaculo">Modo: Obstáculo</button>
+
+    <div class="grid" id="grid"></div>
+
+    <script>
+        const rows = 15;
+        const cols = 20;
+
+        const grid = document.getElementById('grid');
+        let selectedPartida = null;
+        let selectedDestino = null;
+        let isPartidaMode = true;
+        let isObstaculoMode = false;
+
+        const toggleButton = document.getElementById('toggle-mode');
+        const toggleObstaculoButton = document.getElementById('toggle-obstaculo');
+        const validateButton = document.getElementById('validate-selection');
+        const calculateButton = document.getElementById('calculate-adjacent');
+
+        let celdasAbiertas = [];
+        let celdasCerradas = [];
+
+        // Crear la cuadricula inicial
+        function crearCuadricula() {
+            grid.innerHTML = '';
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.setAttribute('data-row', row);
+                    cell.setAttribute('data-col', col);
+                    cell.addEventListener('click', cellClicked);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Al hacer clic en el botón "Toggle Mode"
+        toggleButton.addEventListener('click', function() {
+            isPartidaMode = !isPartidaMode;
+            isObstaculoMode = false;
+            toggleButton.textContent = isPartidaMode ? "Modo: Partida" : "Modo: Destino";
+            toggleObstaculoButton.textContent = "Modo: Obstáculo";
+        });
+
+        // Al hacer clic en el botón "Modo Obstáculo"
+        toggleObstaculoButton.addEventListener('click', function() {
+            isObstaculoMode = !isObstaculoMode;
+            isPartidaMode = false;
+            toggleButton.textContent = "Modo: Partida";
+            toggleObstaculoButton.textContent = isObstaculoMode ? "Modo: Obstáculo Activo" : "Modo: Obstáculo";
+        });
+
+        // Función para manejar el clic en las celdas
+        function cellClicked(event) {
+            const clickedCell = event.target;
+            const row = parseInt(clickedCell.getAttribute('data-row'));
+            const col = parseInt(clickedCell.getAttribute('data-col'));
+
+            if (isObstaculoMode) {
+                clickedCell.style.backgroundColor = '#000000';
+                clickedCell.classList.add('obstaculo');
+            } else if (isPartidaMode) {
+                if (selectedPartida) {
+                    selectedPartida.classList.remove('partida');
+                }
+                selectedPartida = clickedCell;
+                selectedPartida.classList.add('partida');
+            } else {
+                if (selectedDestino) {
+                    selectedDestino.classList.remove('destino');
+                }
+                selectedDestino = clickedCell;
+                selectedDestino.classList.add('destino');
+            }
+        }
+
+        // Función para calcular celdas adyacentes
+        calculateButton.addEventListener('click', function() {
+            if (!selectedPartida || !selectedDestino) {
+                alert("Debe seleccionar un punto de partida y un punto de destino.");
+                return;
+            }
+
+            const partidaRow = parseInt(selectedPartida.getAttribute('data-row'));
+            const partidaCol = parseInt(selectedPartida.getAttribute('data-col'));
+            const destinoRow = parseInt(selectedDestino.getAttribute('data-row'));
+            const destinoCol = parseInt(selectedDestino.getAttribute('data-col'));
+
+            // Coordenadas de las celdas adyacentes (8 direcciones)
+            const adyacentes = [
+                { row: partidaRow - 1, col: partidaCol - 1, diagonal: true },
+                { row: partidaRow - 1, col: partidaCol, diagonal: false },
+                { row: partidaRow - 1, col: partidaCol + 1, diagonal: true },
+                { row: partidaRow, col: partidaCol - 1, diagonal: false },
+                { row: partidaRow, col: partidaCol + 1, diagonal: false },
+                { row: partidaRow + 1, col: partidaCol - 1, diagonal: true },
+                { row: partidaRow + 1, col: partidaCol, diagonal: false },
+                { row: partidaRow + 1, col: partidaCol + 1, diagonal: true }
+            ];
+
+            // Calcular los valores G, H y F para cada celda adyacente
+            adyacentes.forEach(adyacente => {
+                if (adyacente.row >= 0 && adyacente.row < rows && adyacente.col >= 0 && adyacente.col < cols) {
+                    const cell = grid.querySelector(`[data-row="${adyacente.row}"][data-col="${adyacente.col}"]`);
+
+                    // Saltar si es obstáculo o ya está en celdas cerradas
+                    if (cell.classList.contains('obstaculo') || celdasCerradas.includes(cell)) {
+                        return;
+                    }
+
+                    // Calcular valor G
+                    const g = adyacente.diagonal ? 14 : 10;
+
+                    // Calcular valor H (distancia de Manhattan aproximada)
+                    const h = (Math.abs(adyacente.row - destinoRow) + Math.abs(adyacente.col - destinoCol)) * 10;
+
+                    // Calcular valor F
+                    const f = g + h;
+
+                    // Mostrar los valores G, H y F en la celda
+                    const gLabel = document.createElement('div');
+                    gLabel.classList.add('valueG');
+                    gLabel.textContent = g;
+                    cell.appendChild(gLabel);
+
+                    const hLabel = document.createElement('div');
+                    hLabel.classList.add('valueH');
+                    hLabel.textContent = h;
+                    cell.appendChild(hLabel);
+
+                    const fLabel = document.createElement('div');
+                    fLabel.classList.add('valueTotal');
+                    fLabel.textContent = f;
+                    cell.appendChild(fLabel);
+
+                    // Marcar la celda como adyacente
+                    cell.classList.add('adyacente');
+
+                    // Agregar la celda a la lista abierta
+                    celdasAbiertas.push(cell);
+                }
+            });
+
+            // Mover el punto de partida a las celdas cerradas
+            celdasCerradas.push(selectedPartida);
+        });
+
+        // Crear la cuadrícula al cargar la página
+        crearCuadricula();
+    </script>
+</body>
+</html>

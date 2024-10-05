@@ -127,7 +127,7 @@
     const calculateButton = document.getElementById('calculate-adjacent');
     const errorMessage = document.getElementById('error-message');
 
-    let adyacentes = [];
+    let celdasAbiertas = [];
     let celdasCerradas = [];
 
     // Crear la cuadricula inicial
@@ -182,7 +182,7 @@
             errorMessage.textContent = 'Error: Debe seleccionar un punto de partida.';
         }
     });
-
+/*
  	// Modificación para añadir la propiedad 'padre'
     function iniciarBusquedaCamino() {
         limpiarTablero();  // Limpiar el tablero antes de comenzar la búsqueda
@@ -190,7 +190,7 @@
         celdasCerradas.push(selectedPartida);  // Iniciar desde la partida
         continuarBusqueda();
     }
-    
+    */
     // Función para manejar el clic en las celdas
     function cellClicked(event) {
         const clickedCell = event.target;
@@ -248,7 +248,7 @@
 
         // Si encontramos el destino (valorH = 0), detenemos el bucle
         if (destinoEncontrado) {
-            trazarRutaOptima(selectedDestino); // Trazar la ruta óptima
+            //trazarRutaOptima(selectedDestino); // Trazar la ruta óptima
             setTimeout(() => {
                 alert("¡Se ha encontrado el destino!");
             }, 500);
@@ -258,7 +258,7 @@
         let mejorCelda = null;
         let minF = Infinity;
 
-        adyacentes.forEach(celda => {
+        celdasAbiertas.forEach(celda => {
             if (celda.valorF < minF) {
                 minF = celda.valorF;
                 mejorCelda = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
@@ -272,7 +272,7 @@
 
         setTimeout(continuarBusqueda, 500);
     }
- 
+ /*
     function actualizarValoresVisuales(celda, valorG, valorH) {
         let valorGElemento = celda.querySelector('.valueG');
         if (!valorGElemento) {
@@ -306,6 +306,7 @@
 	        celda = celda.padre;  // Ir hacia la celda padre
 	    }
 	}
+ */
  // Calcular celdas adyacentes
     function calcularAdyacentes(partidaCell) {
         const partidaRow = parseInt(partidaCell.getAttribute('data-row'));
@@ -443,7 +444,7 @@
 
     // Limpiar celdas adyacentes, cerradas y sus valores
     function limpiarTablero() {
-        adyacentes.forEach(celda => {
+		celdasAbiertas.forEach(celda => {
             const cellElement = document.querySelector(`.cell[data-row='${celda.row}'][data-col='${celda.col}']`);
             cellElement.classList.remove('adyacente');
             cellElement.style.backgroundColor = '';
@@ -467,7 +468,7 @@
             if (valorF) valorF.remove();
         });
 
-        adyacentes = [];
+        celdasAbiertas = [];
         celdasCerradas = [];
     }
 
