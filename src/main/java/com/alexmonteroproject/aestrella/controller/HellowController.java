@@ -51,6 +51,6 @@ public class HellowController {
 
     @GetMapping("/aestrella3")  // Esta URL será http://localhost:4500/aestrella/2
     public String getAestrella3() {
-        return "aestrella2";  // Nombre del archivo HTML sin la extensión
+        return "aestrella3";  // Nombre del archivo HTML sin la extensión
     }
 }

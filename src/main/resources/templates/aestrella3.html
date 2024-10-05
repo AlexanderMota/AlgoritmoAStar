@@ -51,6 +51,12 @@
         .cell.obstaculo {
             background-color: black;
         }
+        .cell.cerrada {
+            background-color: lightsteelblue; /* Color gris azulado */
+        }
+        .cell.camino {
+            background-color: green; /* Color del camino más corto */
+        }
     </style>
 </head>
 <body>
@@ -59,7 +65,7 @@
 
     <button id="toggle-mode">Modo: Partida</button>
     <button id="validate-selection">Validar Partida y Destino</button>
-    <button id="calculate-adjacent">Calcular Celdas Adyacentes</button>
+    <button id="calculate-adjacent">Iniciar Búsqueda</button>
     <button id="toggle-obstaculo">Modo: Obstáculo</button>
 
     <div class="grid" id="grid"></div>
@@ -76,7 +82,6 @@
 
         const toggleButton = document.getElementById('toggle-mode');
         const toggleObstaculoButton = document.getElementById('toggle-obstaculo');
-        const validateButton = document.getElementById('validate-selection');
         const calculateButton = document.getElementById('calculate-adjacent');
 
         let celdasAbiertas = [];
@@ -144,69 +149,170 @@
                 return;
             }
 
-            const partidaRow = parseInt(selectedPartida.getAttribute('data-row'));
-            const partidaCol = parseInt(selectedPartida.getAttribute('data-col'));
-            const destinoRow = parseInt(selectedDestino.getAttribute('data-row'));
-            const destinoCol = parseInt(selectedDestino.getAttribute('data-col'));
+            iniciarBusqueda();
+        });
+
+        function iniciarBusqueda() {
+            // Limpiar las listas abiertas y cerradas
+            celdasAbiertas = [];
+            celdasCerradas = [];
+
+            // Agregar la celda de partida a la lista abierta
+            celdasAbiertas.push({
+                cell: selectedPartida,
+                g: 0, // El costo desde el punto de partida hasta el mismo punto es 0
+                h: calcularHeuristica(selectedPartida),
+                f: calcularHeuristica(selectedPartida), // Al inicio, f = h
+                parent: null // La celda de partida no tiene celda padre
+            });
+
+            // Marcar las celdas adyacentes de la celda de partida
+            const { row, col } = obtenerCoordenadas(selectedPartida);
+            marcarAdyacentes(row, col, 0);
+
+            // Iniciar el bucle de búsqueda
+            realizarBusqueda();
+        }
+
+        function realizarBusqueda() {
+            if (celdasAbiertas.length === 0) {
+                alert("No se ha encontrado una ruta.");
+                return;
+            }
+
+            // Elegir la celda con el menor valor de f en la lista abierta
+            const celdaActual = celdasAbiertas.reduce((prev, curr) => (prev.f < curr.f ? prev : curr));
+
+            // Mover la celda actual a la lista cerrada
+            celdasCerradas.push(celdaActual.cell);
+            celdaActual.cell.classList.remove('adyacente');
+            celdaActual.cell.classList.add('cerrada'); // Pintamos la celda de color gris azulado
+            celdasAbiertas = celdasAbiertas.filter(celda => celda !== celdaActual);
+
+            // Si llegamos al destino, trazamos el camino
+            if (celdaActual.cell === selectedDestino) {
+                trazarCamino(celdaActual);
+                alert("¡Ruta encontrada!");
+                return;
+            }
+
+            const { row: actualRow, col: actualCol } = obtenerCoordenadas(celdaActual.cell);
 
             // Coordenadas de las celdas adyacentes (8 direcciones)
             const adyacentes = [
-                { row: partidaRow - 1, col: partidaCol - 1, diagonal: true },
-                { row: partidaRow - 1, col: partidaCol, diagonal: false },
-                { row: partidaRow - 1, col: partidaCol + 1, diagonal: true },
-                { row: partidaRow, col: partidaCol - 1, diagonal: false },
-                { row: partidaRow, col: partidaCol + 1, diagonal: false },
-                { row: partidaRow + 1, col: partidaCol - 1, diagonal: true },
-                { row: partidaRow + 1, col: partidaCol, diagonal: false },
-                { row: partidaRow + 1, col: partidaCol + 1, diagonal: true }
+                { row: actualRow - 1, col: actualCol - 1, diagonal: true },
+                { row: actualRow - 1, col: actualCol, diagonal: false },
+                { row: actualRow - 1, col: actualCol + 1, diagonal: true },
+                { row: actualRow, col: actualCol - 1, diagonal: false },
+                { row: actualRow, col: actualCol + 1, diagonal: false },
+                { row: actualRow + 1, col: actualCol - 1, diagonal: true },
+                { row: actualRow + 1, col: actualCol, diagonal: false },
+                { row: actualRow + 1, col: actualCol + 1, diagonal: true }
             ];
 
-            // Calcular los valores G, H y F para cada celda adyacente
+            // Evaluar las celdas adyacentes
             adyacentes.forEach(adyacente => {
-                if (adyacente.row >= 0 && adyacente.row < rows && adyacente.col >= 0 && adyacente.col < cols) {
-                    const cell = grid.querySelector(`[data-row="${adyacente.row}"][data-col="${adyacente.col}"]`);
+                const cell = grid.querySelector(`[data-row="${adyacente.row}"][data-col="${adyacente.col}"]`);
 
-                    // Saltar si es obstáculo o ya está en celdas cerradas
-                    if (cell.classList.contains('obstaculo') || celdasCerradas.includes(cell)) {
-                        return;
+                // Ignorar celdas que son obstáculos o que ya están en la lista cerrada
+                if (!cell || cell.classList.contains('obstaculo') || celdasCerradas.includes(cell)) {
+                    return;
+                }
+
+                const g = celdaActual.g + (adyacente.diagonal ? 14 : 10);
+                const h = calcularHeuristica(cell);
+                const f = g + h;
+
+                // Verificar si la celda ya está en la lista abierta
+                const celdaExistente = celdasAbiertas.find(celda => celda.cell === cell);
+
+                if (celdaExistente) {
+                    // Si la celda ya está en la lista abierta, actualizar si encontramos un mejor camino
+                    if (g < celdaExistente.g) {
+                        celdaExistente.g = g;
+                        celdaExistente.f = f;
+                        celdaExistente.parent = celdaActual;
+                        updateCellDisplay(cell, g, h, f);
                     }
+                } else {
+                    // Si no está en la lista abierta, agregarla
+                    celdasAbiertas.push({
+                        cell: cell,
+                        g: g,
+                        h: h,
+                        f: f,
+                        parent: celdaActual
+                    });
 
-                    // Calcular valor G
-                    const g = adyacente.diagonal ? 14 : 10;
-
-                    // Calcular valor H (distancia de Manhattan aproximada)
-                    const h = (Math.abs(adyacente.row - destinoRow) + Math.abs(adyacente.col - destinoCol)) * 10;
-
-                    // Calcular valor F
-                    const f = g + h;
-
-                    // Mostrar los valores G, H y F en la celda
-                    const gLabel = document.createElement('div');
-                    gLabel.classList.add('valueG');
-                    gLabel.textContent = g;
-                    cell.appendChild(gLabel);
-
-                    const hLabel = document.createElement('div');
-                    hLabel.classList.add('valueH');
-                    hLabel.textContent = h;
-                    cell.appendChild(hLabel);
-
-                    const fLabel = document.createElement('div');
-                    fLabel.classList.add('valueTotal');
-                    fLabel.textContent = f;
-                    cell.appendChild(fLabel);
-
-                    // Marcar la celda como adyacente
                     cell.classList.add('adyacente');
-
-                    // Agregar la celda a la lista abierta
-                    celdasAbiertas.push(cell);
+                    updateCellDisplay(cell, g, h, f);
                 }
             });
 
-            // Mover el punto de partida a las celdas cerradas
-            celdasCerradas.push(selectedPartida);
-        });
+            // Continuar el ciclo si no hemos llegado al destino
+            setTimeout(realizarBusqueda, 500); // Pausa para visualizar el proceso
+        }
+
+        function trazarCamino(celdaActual) {
+            let currentCell = celdaActual;
+            while (currentCell) {
+                currentCell.cell.classList.add('camino');
+                currentCell = currentCell.parent;
+            }
+        }
+
+        function obtenerCoordenadas(cell) {
+            return {
+                row: parseInt(cell.getAttribute('data-row')),
+                col: parseInt(cell.getAttribute('data-col'))
+            };
+        }
+
+        function calcularHeuristica(cell) {
+            const { row: destinoRow, col: destinoCol } = obtenerCoordenadas(selectedDestino);
+            const { row: cellRow, col: cellCol } = obtenerCoordenadas(cell);
+            return (Math.abs(destinoRow - cellRow) + Math.abs(destinoCol - cellCol)) * 10; // Distancia Manhattan
+        }
+
+        function updateCellDisplay(cell, g, h, f) {
+            cell.innerHTML = '';
+
+            const gLabel = document.createElement('div');
+            gLabel.classList.add('valueG');
+            gLabel.textContent = g;
+            cell.appendChild(gLabel);
+
+            const hLabel = document.createElement('div');
+            hLabel.classList.add('valueH');
+            hLabel.textContent = h;
+            cell.appendChild(hLabel);
+
+            const fLabel = document.createElement('div');
+            fLabel.classList.add('valueTotal');
+            fLabel.textContent = f;
+            cell.appendChild(fLabel);
+        }
+
+        // Función para marcar las celdas adyacentes a la celda seleccionada
+        function marcarAdyacentes(row, col) {
+            const adyacentes = [
+                { row: row - 1, col: col - 1, diagonal: true },
+                { row: row - 1, col: col, diagonal: false },
+                { row: row - 1, col: col + 1, diagonal: true },
+                { row: row, col: col - 1, diagonal: false },
+                { row: row, col: col + 1, diagonal: false },
+                { row: row + 1, col: col - 1, diagonal: true },
+                { row: row + 1, col: col, diagonal: false },
+                { row: row + 1, col: col + 1, diagonal: true }
+            ];
+
+            adyacentes.forEach(adyacente => {
+                const cell = grid.querySelector(`[data-row="${adyacente.row}"][data-col="${adyacente.col}"]`);
+                if (cell && !cell.classList.contains('obstaculo')) {
+                    cell.classList.add('adyacente');
+                }
+            });
+        }
 
         // Crear la cuadrícula al cargar la página
         crearCuadricula();
