@@ -12,6 +12,7 @@ public class HellowController {
 
     @GetMapping("/")
     public String helloWorld(Model model) {
+    	
         /*List<Cell> cells = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 15; j++) {
@@ -19,6 +20,7 @@ public class HellowController {
             }
         }
         model.addAttribute("cells", cells);*/
+    	
         return "main"; // nombre del archivo HTML (main.html) en templates
     }
     /*public static class Cell {
@@ -52,5 +54,15 @@ public class HellowController {
     @GetMapping("/aestrella3")  // Esta URL será http://localhost:4500/aestrella/2
     public String getAestrella3() {
         return "aestrella3";  // Nombre del archivo HTML sin la extensión
+    }
+
+    @GetMapping("/aestrella4")  // Esta URL será http://localhost:4500/aestrella/2
+    public String getAestrella4() {
+        return "aestrella4";  // Nombre del archivo HTML sin la extensión
+    }
+
+    @GetMapping("/aestrella5")  // Esta URL será http://localhost:4500/aestrella/2
+    public String getAestrella5() {
+        return "aestrella5";  // Nombre del archivo HTML sin la extensión
     }
 }

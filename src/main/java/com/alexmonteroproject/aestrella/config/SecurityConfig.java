@@ -10,10 +10,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    	
         http
             .authorizeHttpRequests(authorizeHttpRequests ->
                 authorizeHttpRequests
-                    .requestMatchers("/", "/hello", "/aestrella1", "/aestrella2", "/aestrella3").permitAll() // Permite acceso sin autenticación
+                    .requestMatchers("/css/**", "/js/**", "/images/**", "/", "/hello", "/aestrella1", "/aestrella2", "/aestrella3", "/aestrella4", "/aestrella5").permitAll() // Permite acceso sin autenticación
                     .anyRequest().authenticated() // Requiere autenticación para otras rutas
             )
             .formLogin(formLogin ->
@@ -26,4 +27,5 @@ public class SecurityConfig {
             );
         return http.build();
     }
+    
 }
