@@ -88,8 +88,8 @@ const rows = 15;
         celdasAbiertas.push({
             cell: selectedPartida,
             g: 0, // El costo desde el punto de partida hasta el mismo punto es 0
-            h: calcularHeuristica(selectedDestino, selectedPartida), // Cambiado aquí
-            f: calcularHeuristica(selectedDestino, selectedPartida), // Al inicio, f = h
+            h: calcularHeuristica(selectedDestino/*, selectedPartida*/), // Cambiado aquí
+            f: calcularHeuristica(selectedDestino/*, selectedPartida*/), // Al inicio, f = h
             parent: null // La celda de partida no tiene celda padre
         });
 
@@ -150,7 +150,7 @@ const rows = 15;
             }
 
             const g = celdaActual.g + (adyacente.diagonal ? 14 : 10);
-            const h = calcularHeuristica(cell, adyacente.diagonal); // Cambiado aquí para usar la heurística correcta
+            const h = calcularHeuristica(cell/*, adyacente.diagonal*/); // Cambiado aquí para usar la heurística correcta
             const f = g + h;
 
             // Verificar si la celda ya está en la lista abierta
@@ -198,14 +198,14 @@ const rows = 15;
         };
     }
 
-    function calcularHeuristica(cell, diagonal) {
+    function calcularHeuristica(cell/*, diagonal*/) {
         const { row: destinoRow, col: destinoCol } = obtenerCoordenadas(selectedDestino);
         const { row: cellRow, col: cellCol } = obtenerCoordenadas(cell);
         const dx = Math.abs(destinoRow - cellRow);
         const dy = Math.abs(destinoCol - cellCol);
 
         // Calcular la heurística de manera coherente
-        return diagonal ? (dx > dy ? (dy * 14) + ((dx - dy) * 10) : (dx * 14) + ((dy - dx) * 10)) : (dx + dy) * 10; // Distancia Manhattan
+        return /*diagonal ? (*/dx > dy ? (dy * 14) + ((dx - dy) * 10) : (dx * 14) + ((dy - dx) * 10)/*) : (dx + dy) * 10;*/ // Distancia Manhattan
     }
 
     function updateCellDisplay(cell, g, h, f) {
