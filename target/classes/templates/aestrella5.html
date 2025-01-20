@@ -7,36 +7,45 @@
 	    
 	    <link rel="stylesheet" href="/css/aestrella5.css">
 	    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
-	    <link href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css" rel="stylesheet">
+	    <!-- <link href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css" rel="stylesheet"> -->
 	</head>
 	
 	<body>
-	    <h1>Vista de Cuadrícula</h1>
+	    <h1 class="encabezado">Vista de Cuadrícula</h1>
 	
 	
 	    <!-- Inputs para mostrar los valores del eje X y Y -->
-	    <div class="input-group">
-	        <label for="x-partida">Valor del Eje X (Partida):</label>
-	        <input type="text" id="x-partida" readonly>
-	    </div>
-	    <div class="input-group">
-	        <label for="y-partida">Valor del Eje Y (Partida):</label>
-	        <input type="text" id="y-partida" readonly>
-	    </div>
-	    <div class="input-group">
-	        <label for="x-destino">Valor del Eje X (Destino):</label>
-	        <input type="text" id="x-destino" readonly>
-	    </div>
-	    <div class="input-group">
-	        <label for="y-destino">Valor del Eje Y (Destino):</label>
-	        <input type="text" id="y-destino" readonly>
+	    <div class="group-input-group">
+		    <div class="input-group">
+			    <div>
+			        <label for="x-partida">Valor del Eje X (Partida):</label>
+			        <input type="text" id="x-partida" readonly>
+			    </div>
+			    <div>
+			        <label for="y-partida">Valor del Eje Y (Partida):</label>
+			        <input type="text" id="y-partida" readonly>
+			    </div>
+		    </div>
+		    <div class="input-group">
+			    <div >
+			        <label for="x-destino">Valor del Eje X (Destino):</label>
+			        <input type="text" id="x-destino" readonly>
+			    </div>
+			    <div >
+			        <label for="y-destino">Valor del Eje Y (Destino):</label>
+			        <input type="text" id="y-destino" readonly>
+			    </div>	    
+		    </div>
 	    </div>
     
-    	<button id="clean-table">Limpia tablero</button>
-	    <button id="toggle-mode">Modo: Partida</button>
-	    <button id="validate-selection">Validar Partida y Destino</button>
-	    <button id="calculate-adjacent">Iniciar Búsqueda</button>
-	    <button id="toggle-obstaculo">Modo: Obstáculo</button>
+    	<div class="botones">
+    		<button id="clean-table"><img class="iconoBotones" src="/icons/reload.png" alt="icono">Limpia tablero</button>
+		    <button id="toggle-mode"><img class="iconoBotones" src="/icons/flag-checkered.png" alt="icono">Modo: Partida</button>
+		    <button id="validate-selection"><img class="iconoBotones" src="/icons/lightbulb.png" alt="icono">Validar Partida y Destino</button>
+		    <button id="calculate-adjacent"><img class="iconoBotones" src="/icons/map-search-outline.png" alt="icono">Iniciar Búsqueda</button>
+		    <button id="toggle-obstaculo"><img class="iconoBotones" src="/icons/wall.png" alt="icono">Modo: Obstáculo</button>
+    	</div>
+	    	
 	
 	    <div class="grid" id="grid"></div>
 	    

@@ -237,7 +237,7 @@ function updateCellDisplay(cell, g, h, f) {
     cell.appendChild(fLabel);
 }
 
-function trazarCamino(celdaActual) {
+async function trazarCamino(celdaActual) {
     let currentCell = celdaActual;
     while (currentCell) {
 		if(currentCell.cell.classList[1] !== 'partida'){
@@ -246,6 +246,7 @@ function trazarCamino(celdaActual) {
 		}else{
 			currentCell = currentCell.parent;
 		}
+		await new Promise(resolve => setTimeout(resolve, 200));
     }
 }
 

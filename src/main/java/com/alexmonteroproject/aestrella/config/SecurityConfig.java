@@ -14,7 +14,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorizeHttpRequests ->
                 authorizeHttpRequests
-                    .requestMatchers("/css/**", "/js/**", "/images/**", "/", "/hello", "/aestrella1", "/aestrella2", "/aestrella3", "/aestrella4", "/aestrella5").permitAll() // Permite acceso sin autenticación
+                    .requestMatchers("/css/**", "/js/**", "/images/**", "/icons/**", "/", "/hello", "/aestrella1", "/aestrella2", "/aestrella3", "/aestrella4", "/aestrella5").permitAll() // Permite acceso sin autenticación
                     .anyRequest().authenticated() // Requiere autenticación para otras rutas
             )
             .formLogin(formLogin ->

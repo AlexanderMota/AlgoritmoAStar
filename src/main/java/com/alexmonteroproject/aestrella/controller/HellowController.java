@@ -21,7 +21,7 @@ public class HellowController {
         }
         model.addAttribute("cells", cells);*/
     	
-        return "main"; // nombre del archivo HTML (main.html) en templates
+        return "aestrella5"; // nombre del archivo HTML (main.html) en templates
     }
     /*public static class Cell {
         private int row;
